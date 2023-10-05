@@ -1,5 +1,5 @@
 
-#<Made By James mills>
+#<Made By James mills & RR>
 import cmd, textwrap, sys, os, time, random
 import mapsRPG
 import dialogue_mod
@@ -22,13 +22,52 @@ class player:
         self.location = 'Inn'
         self.status_effects = []
         self.inv = []
+        self.hands = [] # There will only be two lots
         self.money_cp = 150
         self.money_sp = 30
         self.money_gp = 7
+        self.ac = 10 # Armor class
+
+class weapons(): # the way this works is how may times a dice is rowled
+    def __init__(self):
+        self.dagger = 1  # Damage: 1d6
+        self.pike = 3    # Damage: 3d6
+        self.bow = 2     # Damage: 2d6
+        self.longsword = 4  # Damage: 4d6
+        self.mace = 2    # Damage: 2d6
+        self.rapier = 4  # Damage: 4d6
+        self.staff = 2   # Damage: 2d6
+        self.axe = 3     # Damage: 3d6
+        self.hammer = 2  # Damage: 2d6
+        self.spear = 2   # Damage: 2d6
+    
+    def get_damage(self, weapon):
+        if weapon.lower() == 'dagger':
+            return self.dagger
+        elif weapon.lower() == 'pike':
+            return self.pike
+        elif weapon.lower() == 'bow':
+            return self.bow
+        elif weapon.lower() == 'longsword':
+            return self.longsword
+        elif weapon.lower() == 'mace':
+            return self.mace
+        elif weapon.lower() == 'rapier':
+            return self.rapier
+        elif weapon.lower() == 'staff':
+            return self.staff
+        elif weapon.lower() == 'axe':
+            return self.axe
+        elif weapon.lower() == 'hammer':
+            return self.hammer
+        elif weapon.lower() == 'spear':
+            return self.spear
+        else:
+            print("error")
 
 
+weapons_ = weapons()
 myPlayer = player()
-
 ##### title Scrren ####
 
 def title_screen_selection():
@@ -215,8 +254,8 @@ zone_map = {
         },
 
     "Shop": {
-        ZONENAME: "A general store where villagers buy goods and supplies.",
-        DESCRIPTION: "Description",
+        ZONENAME: "shop",
+        DESCRIPTION: "A general store where villagers buy goods and supplies.",
         EXAMINATION: "examine",
         EXPLORED: False,
         UP: "P",
@@ -299,6 +338,68 @@ def player_examine(action):
         if zone_map[myPlayer.location][ZONENAME] == "The Drunken Inn (Inn/home)":
             print("You are in the Inn")
             print("")
+
+        if zone_map[myPlayer.location][ZONENAME] == "shop":
+            msg = f"The shop is Empty, There is a counter on one corner. Somthing draws you to it."
+            for character in msg:
+                sys.stdout.write(character)
+                sys.stdout.flush()
+                time.sleep(0.05) 
+            x = """\n
+            +——————————+———————————————————————+——————————+
+            | +——————+ |                       | +——————+ |
+            | |   1  | |                       | |  3   | | 
+            | +——————+ |                       | +——————+ |
+            | +——————+ |                       | +——————+ |
+            | |   2  | |                       | |  4   | |
+            | +——————+ |                       | +——————+ |
+            +——————————+                       +——————————+
+            """
+            for character in x:
+                sys.stdout.write(character)
+                sys.stdout.flush()
+                time.sleep(0.007)
+            correct_draw =  random.randint(1,4)
+
+            for i in range(2):
+                attem = 2
+                ans = input(f"you have {attem} attemps left: " )
+                if ans == correct_draw:
+                    pritn("\nThe draw contains one pease of parchment.")
+                print("""
+                +——————————————————————+
+                |  After 3 days here   |
+                |  I have found It.    |
+                |  The Anomily, a      |
+                |  Obelisk that cont-  |
+                |  ains somthing.      |
+                |  I beleave seting it |
+                |  free may give the   |
+                |  answers I am look-  | 
+                |  ing for. It requires|
+                |   some sort of "Key" |
+                |  the whaire abouts   |
+                |  I beleave to be in  |
+                |  in the tower of dr- |
+                |  uids. (T).          |
+                |    —John smith       |
+                +——————————————————————+
+                """)
+                input("press enter to continue.")
+                x = "You hear somone coming..."
+                for character in x:
+                    sys.stdout.write(character)
+                    sys.stdout.flush()
+                    time.sleep(0.02)
+                break
+            else:
+                print("You find nothing.")
+
+            
+
+
+            
+            
         else:
             print("True")
 
@@ -309,6 +410,9 @@ def diologue_style(name_0):
     print("*"* (len(name_0)))
 
 def dialogue(action):
+    ###############—-—INN—-—###############
+
+
     if zone_map[myPlayer.location][ZONENAME] == "The Drunken Inn (Inn/home)":
         dialogue_ans = input("There are a few people in the inn it is quiet. people:\n The bar maid(1)\n The stranger(2)\n The knight(3)\n The inn keep(4)\n The drunk(5)\nPick a number to speek to.> ")
         if dialogue_ans == "1":
@@ -328,7 +432,7 @@ def dialogue(action):
 
 
             print("\n\nQuestions to ask:")
-            for i in range(4):
+            for i in range(3):
                 print(valid_questions[i])
             print("\n")
             questions = input("> ")
@@ -339,6 +443,16 @@ def dialogue(action):
                 dialogue_mod.Barmaid_d2(myPlayer.name)
             elif questions == "3":
                 dialogue_mod.Barmaid_shop()
+    ###############—-—INN—-—###############
+
+    elif zone_map[myPlayer.location][ZONENAME] == "shop":
+        print("No one is here.")
+         
+
+
+
+
+
     else:
         print("True")
 
@@ -358,6 +472,29 @@ def MAP_look():
 
 
 #### GAME ####
+def swapequiped():
+    print("Current Equips:\n")
+    print(f"(1) = {myPlayer.equiped[0]}")
+    print(f"(2) = {myPlayer.equiped[1]}")
+    item = str(input("which item would you like to swap? Type (1) or (0)> "))
+    if item == "1":
+        myPlayer.inv.append(myPlayer.equiped[0])
+        myPlayer.equiped.remove(myPlayer.equiped[0])
+        print(f"{myPlayer.equiped[0]}(x1) added to inventory.")
+    elif item == "2":
+        myPlayer.inv.append(myPlayer.equiped[1])
+        myPlayer.equiped.remove(myPlayer.equiped[1])
+        print(f"{myPlayer.equiped[1]}(x1) added to invinventory.")
+    item = str(input("what item would you like to equiped?: "))
+    if item in myPlayer.inv:
+        myPlayer.equiped.append(item)
+        myPlayer.inv.remove(item)
+    
+    print()
+    print(myPlayer.inv)
+    print(myPlayer.equiped)
+
+
 
 def choose_spells(player_job):
     available_spells = mage_spells if player_job.lower() == "mage" else priest_spells
@@ -425,7 +562,7 @@ def setup_game():
         print(f"You choose {player_job}.\n")
         while player_job.lower() not in valid_jobs:
             player_job = input("> ")
-            if player_jobs.lower in valid_jobs:
+            if player_jobs.lower() in valid_jobs:
                 myPlayer.job = player_job
     
     if player_job.lower() in ["mage", "priest"]:
