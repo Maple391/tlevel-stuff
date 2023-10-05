@@ -8,7 +8,6 @@ print(name)
 firstName = input("Enter first name:")
 surName = input("Enter surname: ")
 
-print(firstName +" "+ surName)
 
 #Q3
 
