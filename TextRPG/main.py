@@ -1,5 +1,5 @@
 
-#<Made By James mills & RR>
+#<Made By James mills>
 import cmd, textwrap, sys, os, time, random
 import mapsRPG
 import dialogue_mod
@@ -21,12 +21,13 @@ class player:
         self.mp = 0
         self.location = 'Inn'
         self.status_effects = []
-        self.inv = []
-        self.hands = [] # There will only be two lots
+        self.inv = ["dagger", "pike", "axe"]
+        self.equiped = [] # There will only be two lots
         self.money_cp = 150
         self.money_sp = 30
         self.money_gp = 7
         self.ac = 10 # Armor class
+        self.quest = ["Investigate the land"]
 
 class weapons(): # the way this works is how may times a dice is rowled
     def __init__(self):
@@ -150,10 +151,10 @@ def help_menu():
 def settings_menu():
     os.system('cls')
     print("+——————————————————————————+")
-    print("| welcome to the Text RPG! | ")
+    print("| welcome to the Text RPG! |")
     print("+——————————————————————————+")
-    print("      #   color   #          ")
-    print("      # Difficulty #           ")
+    print("      #   color   #         ")
+    print("      # Difficulty #        ")
     title_screen_selection()
     
 #### MAP ####
@@ -162,7 +163,7 @@ def settings_menu():
 """
 Forest: The village is surrounded by a dense forest. Within the forest, there are various locations denoted by letters:
 
-T: Tower of the Druids
+T: Tower of the =ids
 H: Herbalist's Hut
 ?: Anomaly 
 P: Potion Maker's Cottage
@@ -197,9 +198,9 @@ zone_map = {
         DESCRIPTION: "Description",
         EXAMINATION: "examine",
         EXPLORED: False,
-        UP: "",
+        UP: "T",
         DOWN: "P",
-        LEFT:"",
+        LEFT:"T",
         RIGHT: "H",
         },
     "H": {
@@ -217,10 +218,10 @@ zone_map = {
         DESCRIPTION: "Description",
         EXAMINATION: "examine",
         EXPLORED: False,
-        UP: "",
+        UP: "?",
         DOWN: "M",
         LEFT:"H",
-        RIGHT: "",
+        RIGHT: "?",
         },
     "P": {
         ZONENAME: "Potion Maker's Cottage",
@@ -229,16 +230,16 @@ zone_map = {
         EXPLORED: False,
         UP: "T",
         DOWN: "Shop",
-        LEFT:"",
-        RIGHT: "c",
+        LEFT:"p",
+        RIGHT: "C",
         },
     "C": {
         ZONENAME: "Clearing with a Sacred Stone Circle",
         DESCRIPTION: "Description",
         EXAMINATION: "examine",
         EXPLORED: False,
-        UP: "",
-        DOWN: "",
+        UP: "C",
+        DOWN: "C",
         LEFT:"P",
         RIGHT: "M",
         },
@@ -248,9 +249,9 @@ zone_map = {
         EXAMINATION: "examine",
         EXPLORED: False,
         UP: "?",
-        DOWN: "",
+        DOWN: "M",
         LEFT:"C",
-        RIGHT: "",
+        RIGHT: "M",
         },
 
     "Shop": {
@@ -260,7 +261,7 @@ zone_map = {
         EXPLORED: False,
         UP: "P",
         DOWN: "Moun",
-        LEFT:"",
+        LEFT:"Shop",
         RIGHT: "Inn",
         },
     "Inn": {
@@ -269,9 +270,9 @@ zone_map = {
         EXAMINATION: "The inn is old and warm - it looks safe",
         EXPLORED: False,
         UP: "M",
-        DOWN: "",
+        DOWN: "Inn",
         LEFT:"Shop",
-        RIGHT: "",
+        RIGHT: "Inn",
         },
     "Moun": {
         ZONENAME: "In the distance, there are towering mountains",
@@ -279,25 +280,37 @@ zone_map = {
         EXAMINATION: "examine",
         EXPLORED: False,
         UP: "Inn",
-        DOWN: "",
-        LEFT:"",
-        RIGHT: "",
+        DOWN: "Moun",
+        LEFT:"Moun",
+        RIGHT: "Moun",
         },
         
     }
 #### Game Interactivity ####
+def inventory():
+    print("You open up your bag and you see...")
+    for item in myPlayer.inv:
+        print(item)
+    print(f"\nYou open up your purse and see {myPlayer.money_gp} gold pieces, {myPlayer.money_sp} silver pieces and {myPlayer.money_cp} copper pieces.")
+    print(f"\nYou have in equipped items, {myPlayer.equiped}")
+    swapInput = str(input("\nWould you like to swap(or add) your equipped items y/n?: "))
+    if swapInput == "y":
+        swapequiped()
+
 def print_location():
     print("\n" + ("—" * (4+ len(myPlayer.location))))
     print(f"- {zone_map [myPlayer.location] [ZONENAME]} #")
     print(f"- {zone_map [myPlayer.location] [DESCRIPTION]} #")
     print("\n" + ("—" * (4+ len(myPlayer.location))))
 
-
+def quests():
+    print("========================")
+    print(myPlayer.quest)
 def prompt():
     print(f"\n=================================")
     print("What would you like to do")
     action = input("> ")
-    acceptable_actions = ["move", "go", "travle", "walk", "quit", "examine", "inspect", "look", "map", "look at map", "speek", "talk", "speek to someone"]
+    acceptable_actions = ["use","inv","inventory","move", "go", "travle", "walk", "quit", "examine", "inspect", "look", "map", "look at map", "speek", "talk", "speek to someone", "quests"]
     while action.lower() not in acceptable_actions:
         print("Error Unknown action.\n")
         action = input("> ")
@@ -309,10 +322,12 @@ def prompt():
         player_examine(action.lower)
     elif action.lower() in ["map", "look at map"]:
         MAP_look()
-    elif action in ["talk", "speek to someone", "speek"]:
+    elif action.lower() in ["talk", "speek to someone", "speek"]:
         dialogue(action)
-
-        
+    elif action.lower() in ["inv", "inventory"]:
+        inventory()
+    elif action.lower() in ["use"]:
+        use_Item()
 def player_move(myAction):
     dest = input("Were would you like to move to?\n>")
     if dest in ["up", "north"]:
@@ -323,7 +338,10 @@ def player_move(myAction):
         movement_handeler(destination)
     elif dest in ["east", "right"]:
         destination = zone_map[myPlayer.location][RIGHT]
-        
+        movement_handeler(destination)
+    elif dest in ["down", "south"]:
+        destination = zone_map[myPlayer.location][DOWN]
+        movement_handeler(destination)
 
 
 def movement_handeler(destination):
@@ -365,7 +383,7 @@ def player_examine(action):
                 attem = 2
                 ans = input(f"you have {attem} attemps left: " )
                 if ans == correct_draw:
-                    pritn("\nThe draw contains one pease of parchment.")
+                    print("\nThe draw contains one pease of parchment.")
                 print("""
                 +——————————————————————+
                 |  After 3 days here   |
@@ -395,9 +413,44 @@ def player_examine(action):
             else:
                 print("You find nothing.")
 
-            
+        if zone_map[myPlayer.location][ZONENAME] == "Tower of the Druids":
+            dialogue_mod.dru_tower()
+            myPlayer.quest.clear()
+            myPlayer.quest = ["Investigate 'C' and find the token"]
+            print("Investigate 'C' and find the token")
 
-
+######################################### CLEARTING ("C") #########################################
+        if zone_map[myPlayer.location][ZONENAME] == "Clearing with a Sacred Stone Circle":
+            print("you see a clearing, black rocks pears the ground like teeth.\nIn the center is a alter, with a shiny gold token.")
+            input("press enter to continue.")
+            print("You move close and pick it up...")
+            time.sleep(6)
+            print("gold token (x1) added to inventory")
+            myPlayer.inv.append("gold token")
+        if zone_map[myPlayer.location][ZONENAME] == "?":
+            print("You see a tall obsidian colored obelisk. with may cracks in it. there is a small sercu;l ")
+            print("""
+      .^.          
+     ./ \.            
+    ./   \.            
+   ./     \.    
+  ./       \.    
+ ./|        \.
+./ \         \. 
+ |  \_____   |
+ |        \ /|
+ |         Y |
+ |\       /  |
+ | \     |   |
+ |  \___|    |
+ |  /   |    |
+ | |    |    |
+ | \     \   |
+ | |      |  |
+­———————————————
+|    | O |    |
+———————————————""")
+            print("")
             
             
         else:
@@ -424,7 +477,6 @@ def dialogue(action):
             bm_speach = "The bar maid: Hi what can i get startd for you, love?\nIf you've any quearys love don't hesitate to ask?"
 
             print("\n")
-           
             for character in bm_speach:
                 sys.stdout.write(character)
                 sys.stdout.flush()
@@ -447,7 +499,6 @@ def dialogue(action):
 
     elif zone_map[myPlayer.location][ZONENAME] == "shop":
         print("No one is here.")
-         
 
 
 
@@ -473,26 +524,35 @@ def MAP_look():
 
 #### GAME ####
 def swapequiped():
-    print("Current Equips:\n")
-    print(f"(1) = {myPlayer.equiped[0]}")
-    print(f"(2) = {myPlayer.equiped[1]}")
-    item = str(input("which item would you like to swap? Type (1) or (0)> "))
-    if item == "1":
-        myPlayer.inv.append(myPlayer.equiped[0])
-        myPlayer.equiped.remove(myPlayer.equiped[0])
-        print(f"{myPlayer.equiped[0]}(x1) added to inventory.")
-    elif item == "2":
-        myPlayer.inv.append(myPlayer.equiped[1])
-        myPlayer.equiped.remove(myPlayer.equiped[1])
-        print(f"{myPlayer.equiped[1]}(x1) added to invinventory.")
-    item = str(input("what item would you like to equiped?: "))
-    if item in myPlayer.inv:
-        myPlayer.equiped.append(item)
-        myPlayer.inv.remove(item)
-    
-    print()
-    print(myPlayer.inv)
-    print(myPlayer.equiped)
+    try:
+        print("Current Equips:\n")
+        print(f"(1) = {myPlayer.equiped[0]}")
+        print(f"(2) = {myPlayer.equiped[1]}")
+        
+        item = str(input("which item would you like to swap? Type (1) or (0)> "))
+        if item == "1":
+            myPlayer.inv.append(myPlayer.equiped[0])
+            myPlayer.equiped.remove(myPlayer.equiped[0])
+            print(f"{myPlayer.equiped[0]}(x1) added to inventory.")
+        elif item == "2":
+            myPlayer.inv.append(myPlayer.equiped[1])
+            myPlayer.equiped.remove(myPlayer.equiped[1])
+            print(f"{myPlayer.equiped[1]}(x1) added to invinventory.")
+        item = str(input("what item would you like to equiped?: "))
+        if item in myPlayer.inv:
+            myPlayer.equiped.append(item)
+            myPlayer.inv.remove(item)
+
+        print()
+        print(myPlayer.inv)
+        print(myPlayer.equiped)
+    except:
+        print(myPlayer.equiped)
+        print("you may have 1 or no items in, you must be carying 2 items to swap.")
+        item = str(input("what item would you like to equiped?: "))
+        if item in myPlayer.inv:
+            myPlayer.equiped.append(item)
+            myPlayer.inv.remove(item)
 
 
 
@@ -562,7 +622,7 @@ def setup_game():
         print(f"You choose {player_job}.\n")
         while player_job.lower() not in valid_jobs:
             player_job = input("> ")
-            if player_jobs.lower() in valid_jobs:
+            if player_job.lower() in valid_jobs:
                 myPlayer.job = player_job
     
     if player_job.lower() in ["mage", "priest"]:
@@ -616,6 +676,21 @@ def setup_game():
             time.sleep(0.01)
     main_game_loop()
 
+######################################### —- USE -— #########################################
+def use_Item():
+    item = str(input("Item You want to use: "))
+    if item in myPlayer.equiped:
+        print(f"You use you're {item}")
+        if item == "gold token":
+            print("---")
+            if zone_map[myPlayer.location][ZONENAME] == "?":
+                print("---")
+                end_c1() # END CHAPTER 1
+        else:
+            print("Error")
+    elif item in myPlayer.inv:
+        print("swap your item to equips")
+
 
 #### Shop ####
 def Inn_shop():
@@ -636,5 +711,28 @@ def Inn_shop():
         else:
             print("Error wrong input") 
 
+
+
+#### END CHAPTER ONE ####
+def end_c1():
+    msg = f"You insert the token into the slot. It suddenly turns clock wise 2 symbols suddley line up and the top pyromid opens.\n A dark mist streams out...\n"
+    for character in msg:
+        sys.stdout.write(character)
+        sys.stdout.flush()
+        time.sleep(0.07) 
+    msg = "You hear a voice in your head... "
+    for character in msg:
+        sys.stdout.write(character)
+        sys.stdout.flush()
+        time.sleep(0.3)
+    msg = '"We are the Darkness...\nWe Are the night...\nWe are The Old ones..."'
+    for character in msg:
+        sys.stdout.write(character)
+        sys.stdout.flush()
+    print("\nChapter 1 compleat.")
+    input("\nPress enter to continue.")
+    os.system("cls")
+    #chapter 2#
+    print("-chapter 2-")
 #### THE GAME START ####    
 title_screen()
